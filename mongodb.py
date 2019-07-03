@@ -14,7 +14,7 @@ class MongoDB(object):
         self.plugin_name = "mongo"
         self.mongo_host = "127.0.0.1"
         self.mongo_port = 27017
-        self.mongo_db = ["admin", ]
+        self.mongo_db = ["admin", "*"]
         self.mongo_user = None
         self.mongo_password = None
 
@@ -140,6 +140,19 @@ class MongoDB(object):
                 self.mongo_db = node.values
             else:
                 collectd.warning("mongodb plugin: Unkown configuration key %s" % node.key)
+
+        if '*' in self.mongo_db:
+            collectd.warning("auto detecting databases.....")
+            con = MongoClient(host=self.mongo_host, port=self.mongo_port, read_preference=ReadPreference.SECONDARY)
+            db = con[self.mongo_db[0]]
+            if self.mongo_user and self.mongo_password:
+                db.authenticate(self.mongo_user, self.mongo_password)
+            db_list=db.command("listDatabases")
+            database_list=[]
+            for d in db_list["databases"]:
+                collectd.warning("db: %s" % str(d['name']))
+                database_list.append(d['name'])
+            self.mongo_db=database_list
 
 mongodb = MongoDB()
 collectd.register_read(mongodb.get_db_and_collection_stats)
