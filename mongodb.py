@@ -1,6 +1,8 @@
 #
 # Plugin to collectd statistics from MongoDB
 #
+# source: https://github.com/sebest/collectd-mongodb
+#
 
 import collectd
 from pymongo import MongoClient
